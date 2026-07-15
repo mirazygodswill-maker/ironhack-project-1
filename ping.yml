@@ -1,0 +1,17 @@
+---
+- name: Test Ansible Connectivity
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Ping all hosts
+      ansible.builtin.ping:
+
+    - name: Update apt package index
+      ansible.builtin.apt:
+        update_cache: yes
+    
+    - name: Install Docker if not present
+      ansible.builtin.package:
+        name: docker.io
+        state: present

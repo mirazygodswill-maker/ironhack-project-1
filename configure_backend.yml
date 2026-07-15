@@ -1,0 +1,61 @@
+---
+- name: Install Backend
+  hosts: backend
+  become: yes
+  gather_facts: false
+
+
+  tasks:
+    - name: Create backend Docker network
+      docker_network:
+        name: backend-network
+        state: present
+    - name: Pull Worker Docker Image
+      docker_image:
+        name: mirazygodswill/worker-app
+        tag: latest
+        source: pull
+
+    - name: Pull Redis Docker Image
+      docker_image:
+        name: redis
+        tag: 7-alpine
+        source: pull
+
+    - name: Remove existing Worker container
+      docker_container:
+        name: worker
+        state: absent
+
+    - name: Remove existing Redis container
+      docker_container:
+        name: redis
+        state: absent
+
+    - name: Run Redis Container
+      docker_container:
+        name: redis
+        image: redis:7-alpine
+        state: started
+        restart_policy: always
+        networks:
+          - name: backend-network
+        ports:
+          - "6379:6379"
+
+    - name: Run Worker Container
+      docker_container:
+        name: worker
+        image: mirazygodswill/worker-app:latest
+        state: started
+        restart_policy: always
+        networks:
+          - name: backend-network
+        env:
+          REDIS_HOST: redis
+          REDIS_PORT: "6379"
+          DB_HOST: "10.0.2.59"
+          DB_PORT: "5432"
+          DB_NAME: votes
+          DB_USERNAME: postgres
+          DB_PASSWORD: postgres

@@ -1,0 +1,51 @@
+---
+- name: Install Frontend
+  hosts: frontend
+  become: yes
+  gather_facts: false
+
+  tasks:
+    - name: Pull Vote Docker Image
+      docker_image:
+        name: mirazygodswill/voting-app
+        source: pull
+        tag: latest
+
+    # TODO: Add task to remove existing running vote + result containers if they exist
+    # because chances are ansible is going to try to start a container with the same name
+    # and fail because it already exists
+
+
+    - name: Run Container Vote
+      docker_container:
+        name: vote
+        image: mirazygodswill/voting-app:latest
+        ports:
+          - "80:80"
+        env:
+          REDIS_HOST: "10.0.2.149"
+          REDIS_PORT: "6379"
+        state: started
+        restart_policy: always
+        
+
+    - name: Run Container Result
+      docker_container:
+        name: result
+        image: mirazygodswill/result-app:latest
+        ports:
+          - "81:80"
+        env:
+          PG_HOST: "10.0.2.59"
+          PG_PORT: "5432"
+          PG_USER: "postgres"
+          PG_PASSWORD: "postgres"
+          PG_DATABASE: "votes"
+        state: started
+        restart_policy: always
+        
+    #      PG_HOST=db \
+    # PG_PORT=5432 \
+    # PG_USER=postgres \
+    # PG_PASSWORD=postgres \
+    # PG_DATABASE=postgres

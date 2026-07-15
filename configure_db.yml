@@ -1,0 +1,33 @@
+---
+- name: Install Database
+  hosts: db
+  become: yes
+  gather_facts: false
+
+  tasks:
+
+    - name: Pull PostgreSQL Docker Image
+      docker_image:
+        name: postgres
+        source: pull
+        tag: latest
+
+
+    - name: Remove existing PostgreSQL container
+      docker_container:
+        name: postgres
+        state: absent
+
+
+    - name: Run PostgreSQL Container
+      docker_container:
+        name: postgres
+        image: postgres:latest
+        ports:
+          - "5432:5432"
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: votes
+        state: started
+        restart_policy: always
